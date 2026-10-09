@@ -1,0 +1,35 @@
+name: Build CraftMate for Windows
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'app.py'
+      - '.github/workflows/build-windows.yml'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pip pyinstaller
+      - name: Syntax check
+        run: python -m py_compile app.py
+      - name: Build portable executable
+        run: pyinstaller --noconfirm --clean --onefile --windowed --name CraftMate app.py
+      - name: Package executable
+        run: Compress-Archive -Path dist\CraftMate.exe -DestinationPath CraftMate-Windows.zip
+      - name: Upload executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CraftMate-Windows
+          path: CraftMate-Windows.zip
+          if-no-files-found: error
+          retention-days: 14
